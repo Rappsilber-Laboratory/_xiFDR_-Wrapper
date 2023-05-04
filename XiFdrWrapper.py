@@ -17,14 +17,15 @@ def calculate_elapsed_time(starttime):
 
 class XiFdrWrapper:
     def __init__(self):
+        self.logger = logger
         pass
 
     @staticmethod
     def build_xifdr_arguments(fdr_input_csv, fdr_output_dir, pepfdr, memory="1G", reportfactor="10000",
                               additional_xifdr_arguments=list(), xifdr_filename="xiFDRDB-1.1.25.55-jar-with-dependencies.jar"):
-        assert isinstance(fdr_input_csv, (list, tuple, str, unicode)), \
+        assert isinstance(fdr_input_csv, (list, tuple, str)), \
             """type of fdr_input_csv needs to be in (list, tuple, str, unicode) but is: {}""".format(type(fdr_input_csv))
-        if isinstance(fdr_input_csv, (str, unicode)):
+        if isinstance(fdr_input_csv, str):
             fdr_input_csv = [fdr_input_csv]
         # Example cmd line:
         # java -Xmx1g -cp xiFDRDB-1.0.13.32-jar-with-dependencies.jar org.rappsilber.fdr.CSVinFDR --psmfdr=X --pepfdr=X
@@ -74,13 +75,13 @@ class XiFdrWrapper:
         process = subprocess.Popen(xifdr_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         # real time output of Xi messages
         while True:
-            output = process.stdout.readline()
+            output = process.stdout.readline().decode("ascii")
             exit_code = process.poll()
             if output == '' and exit_code is not None:
                 break
             if output:
                 # print output.strip()
-                logger.debug("xiFDR: " + output.strip())
+                logger.info("xiFDR: " + output)
         if exit_code != 0:  # if process exit code is non zero
             raise subprocess.CalledProcessError(exit_code, " ".join(xifdr_cmd))
         logger.info("xiFDR execution took {} for cmd: {}"
